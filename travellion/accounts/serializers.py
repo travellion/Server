@@ -3,44 +3,31 @@ from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
-from rest_framework.validators import UniqueValidator
 import uuid
 
 
 class UserSerializer(serializers.ModelSerializer):
-    #password2 = serializers.CharField(write_only=True, required=True)
-
-    # name = serializers.CharField(
-    #     required=True,
-    # )
-    # email = serializers.EmailField(
-    #     required=True,
-    #     validators=[UniqueValidator(queryset=User.objects.all())],
-    # )
-    # password = serializers.CharField(
-    #     write_only=True,
-    #     required=True,
-    #     validators=[validate_password],
-    # )
+    repassword = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ("email", "nickname", "password")
-    
-    # def validate(self, data):
-    #     if data['password'] != data['password2']:
-    #         raise serializers.ValidationError(
-    #             {"password": "Passwords don't match."})
+        fields = ("email", "nickname", "password", "repassword")
+
+    def validate(self, data):
+        if data['password'] != data['repassword']:
+            raise serializers.ValidationError({
+                "password" : "Password fields didn't match"
+            })
         
-    #     return data
-    
+        return data
+
     def create(self, validated_data):
         generated_uuid = uuid.uuid4()
         user = User.objects.create_user(
             nickname=validated_data['nickname'],
             email=validated_data['email'],
         )
-        password = validated_data.pop('password')
+        password = validated_data['password']
         user.set_password(password)
         user.save()
         token = Token.objects.create(user=user)
