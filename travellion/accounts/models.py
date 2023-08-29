@@ -6,16 +6,15 @@ import uuid
 
 class UserManager(BaseUserManager):
     # 일반 user 생성
-    def create_user(self, email, nickname, password=None):#  nickname, 
+    def create_user(self, email, nickname, password=None, profile=None):#  nickname, 
         if not email:
             raise ValueError('must have user email')
         if not nickname:
             raise ValueError('must have user nickname')
-        # if not nickname:
-        #     raise ValueError('must have nickname')
         user = self.model(
             email = self.normalize_email(email),
             nickname = nickname,
+            profile = profile,
         )
         user.set_password(password)
         user.save(using=self._db)
@@ -34,9 +33,10 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    userId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(default='', null=False, blank=False, unique=True)
     nickname = models.CharField(default='', max_length=124, null=False, blank=False, unique=False)
+    profile = models.ImageField(verbose_name="profile", blank=True, null=True, upload_to='profile_image')
     
     # User 모델의 필수 field
     is_active = models.BooleanField(default=True)    
@@ -67,8 +67,8 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['nickname']
 
     def save(self, *args, **kwargs):
-        if not self.id:
-            self.id = uuid.uuid4()
+        if not self.userId:
+            self.userId = uuid.uuid4()
         super().save(*args, **kwargs)
 
     def __str__(self):

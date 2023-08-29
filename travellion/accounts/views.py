@@ -15,7 +15,6 @@ class BlacklistRefreshView(APIView):   # 로그아웃시 리프레시 토큰 bla
         token.blacklist()
         return Response("Success")
 
-# 회원가입
 class UserCreate(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -33,7 +32,7 @@ class LoginView(generics.GenericAPIView):
             refresh = RefreshToken.for_user(user)
             serializer = ProfileSerializer(user)
             return Response({
-                'id': serializer.data.get('id'),
+                'userId': serializer.data.get('userId'),
                 'email': serializer.data.get('email'),
                 'nickname': serializer.data.get('nickname'),
                 'access_token': str(refresh.access_token),
@@ -43,5 +42,11 @@ class LoginView(generics.GenericAPIView):
     
 class ProfileList(generics.RetrieveUpdateAPIView):
 
+    lookup_field = 'userId'
+
     queryset = User.objects.all()
     serializer_class = ProfileSerializer
+
+    def get_queryset(self, **kwargs): # Override
+        userId = self.kwargs['userId']
+        return self.queryset.filter(userId=userId)
