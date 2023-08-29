@@ -26,14 +26,31 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'rest_framework',
-    'corsheaders',
-
-    'rest_framework_simplejwt',
-    
+    # myapp
     'budgets',
     'accounts',
+
+    # django-rest-auth
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'dj_rest_auth',
+
+    # 'dj_rest_auth.registration',
+    'rest_auth.registration',
+    'rest_framework.authtoken',
+
+    # django-allauth
+    'allauth',
+    'allauth.account',
+    # 나중에 소셜로그인 할때 주석 해제
+    # 'allauth.socialaccount',
+
+    'corsheaders',
 ]
+
+SITE_ID = 1
+
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -61,6 +78,12 @@ REST_FRAMEWORK = {
 
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+
+    'DEFAULT_PERMISSION_CLASSES': (
+        # 'rest_framework.permissions.IsAuthenticated', # 인증된 사용자만 접근
+        # 'rest_framework.permissions.IsAdminUser', # 관리자만 접근
+        'rest_framework.permissions.AllowAny', # 누구나 접근
     ),
 }
 
@@ -94,7 +117,7 @@ SIMPLE_JWT = {
 
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
-    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+    'TOKEN_USER_CLASS': 'accounts.User',
 
     'JTI_CLAIM': 'jti',
 

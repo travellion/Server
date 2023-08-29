@@ -1,16 +1,15 @@
-from django.contrib import admin
-from django.urls import path
-
-from accounts.views import SpartaTokenObtainPairView
-
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from django.urls import path, include
+from .views import UserCreate, LoginView, ProfileList
+from rest_framework_simplejwt import views as jwt_views
+from .views import BlacklistRefreshView
 
 urlpatterns = [
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('signup/', UserCreate.as_view()),
+    path('login/', LoginView.as_view()),
+    
+    path('profile/<int:pk>/', ProfileList.as_view()), 
 
-    path('api/sparta/token/', SpartaTokenObtainPairView.as_view(), name='sparta_token'),
+    path('', include('rest_framework.urls')),
+    path('token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+    path('logout/', BlacklistRefreshView.as_view(), name="logout"), 
 ]
