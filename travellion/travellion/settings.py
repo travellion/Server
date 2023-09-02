@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # 'allauth.socialaccount',
 
     'corsheaders',
+    'drf_yasg',
 ]
 
 SITE_ID = 1
@@ -137,6 +138,10 @@ CORS_ALLOW_METHODS = [
 'POST',
 'PUT',
 ]
+
+SWAGGER_SETTINGS = {
+    'DEFAULT_INFO': 'myproject.urls.swagger_info',
+}
 
 ROOT_URLCONF = 'travellion.urls'
 
