@@ -7,4 +7,5 @@ group_router.register('group', GroupViewSet, basename='group')
 
 urlpatterns = [
     path('', include(group_router.urls)),
+    path('group/<int:groupId>', include(group_router.urls)),
 ]
