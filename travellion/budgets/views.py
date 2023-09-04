@@ -20,7 +20,6 @@ class GroupViewSet(ModelViewSet):
             raise AuthenticationFailed('Token expired')
         user_id = decoded['userId']
         leader = User.objects.get(pk=user_id)
-        # member = User.objects.get(pk=user_id)
         serializer.save(leader=leader)
-        # serializer.save(member=member)
+
         return super().perform_create(serializer)
