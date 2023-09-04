@@ -7,8 +7,15 @@ from datetime import datetime
 
 
 class GroupSerializer(ModelSerializer):
+    class UserSerializer(serializers.ModelSerializer):
+        class Meta:
+            model=User
+            fields=['id', 'nickname']
+    
     duration = serializers.SerializerMethodField()
     dday = serializers.SerializerMethodField()
+    leader = serializers.ReadOnlyField(source = 'leader.nickname')
+    member = serializers.ReadOnlyField(source = 'member.nickname')
 
     class Meta:
         model = Group
