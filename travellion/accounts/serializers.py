@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ("email", "nickname", "password", "repassword")
+        fields = ("email", "nickname", "age", "password", "repassword")
 
     def validate(self, data):
         if data['password'] != data['repassword']:
@@ -26,6 +26,7 @@ class UserSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(
             nickname=validated_data['nickname'],
             email=validated_data['email'],
+            age=validated_data['age'],
         )
         password = validated_data['password']
         user.set_password(password)
@@ -39,7 +40,7 @@ class ProfileSerializer(serializers.ModelSerializer): # 전체 유저 정보 조
 
     class Meta:
         model = User
-        fields = ['userId', 'email', 'nickname', 'profile']
+        fields = ['userId', 'email', 'nickname', 'age', 'profile']
 
 class LoginSerializer(serializers.Serializer):  # 회원가입한 유저 로그인 
     email = serializers.EmailField(required=True)

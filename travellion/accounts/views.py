@@ -35,6 +35,7 @@ class LoginView(generics.GenericAPIView):
                 'userId': serializer.data.get('userId'),
                 'email': serializer.data.get('email'),
                 'nickname': serializer.data.get('nickname'),
+                'age': serializer.data.get('age'),
                 'access_token': str(refresh.access_token),
                 'refresh_token': str(refresh),
             }, status=status.HTTP_200_OK)
