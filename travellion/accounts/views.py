@@ -7,7 +7,7 @@ from rest_framework.authentication import SessionAuthentication, TokenAuthentica
 from django.contrib.auth import login, logout, authenticate
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from django.core.mail.message import EmailMessage
 
 class BlacklistRefreshView(APIView):   # 로그아웃시 리프레시 토큰 blacklist
     def post(self, request):
@@ -50,3 +50,11 @@ class ProfileList(generics.RetrieveUpdateAPIView):
     def get_queryset(self, **kwargs): # Override
         userId = self.kwargs['userId']
         return self.queryset.filter(userId=userId)
+    
+
+def send_email(request):
+    subject = "message"
+    to = ["id@gmail.com"]
+    from_email = "id@gmail.com"
+    message = "메시지 테스트"
+    EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
