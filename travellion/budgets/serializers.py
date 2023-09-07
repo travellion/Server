@@ -1,23 +1,20 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
+from accounts.serializers import UserSerializer
 from .models import Group
-from accounts.models import User
 from datetime import datetime
 
 
 class GroupSerializer(ModelSerializer):
-    class UserSerializer(serializers.ModelSerializer):
-        class Meta:
-            model=User
-            fields=['userId', 'nickname']
     
     duration = serializers.SerializerMethodField()
     dday = serializers.SerializerMethodField()
     leader = serializers.ReadOnlyField(source = 'leader.nickname')
+    member = UserSerializer(read_only=True, many=True)
 
     class Meta:
         model = Group
-        fields = ['groupId', 'leader', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'dday']
+        fields = ['groupId', 'leader', 'member', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'dday']
 
     def get_duration(self, obj):
         start_date = obj.start_date
