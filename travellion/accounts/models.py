@@ -6,26 +6,30 @@ import uuid
 
 class UserManager(BaseUserManager):
     # 일반 user 생성
-    def create_user(self, email, nickname, password=None, profile=None):#  nickname, 
+    def create_user(self, email, nickname, age, password=None, profile=None):#  nickname, 
         if not email:
             raise ValueError('must have user email')
         if not nickname:
             raise ValueError('must have user nickname')
+        if not age:
+            raise ValueError('must have user age')
         user = self.model(
             email = self.normalize_email(email),
             nickname = nickname,
             profile = profile,
+            age = age,
         )
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     # 관리자 user 생성
-    def create_superuser(self, email, nickname, password=None):
+    def create_superuser(self, email, nickname, age, password=None):
         user = self.create_user(
             email = email,
             password = password,
             nickname = nickname,
+            age = age,
         )
         token = Token.objects.create(user=user)
         user.is_admin = True
@@ -37,7 +41,8 @@ class User(AbstractBaseUser):
     email = models.EmailField(default='', null=False, blank=False, unique=True)
     nickname = models.CharField(default='', max_length=124, null=False, blank=False, unique=False)
     profile = models.ImageField(verbose_name="profile", blank=True, null=True, upload_to='profile_image')
-    
+    age = models.IntegerField(null=True, blank=True)
+
     # User 모델의 필수 field
     is_active = models.BooleanField(default=True)    
     is_admin = models.BooleanField(default=False)
@@ -64,7 +69,7 @@ class User(AbstractBaseUser):
     # 사용자의 username field는 nickname으로 설정
     USERNAME_FIELD = 'email'
     # 필수로 작성해야하는 field
-    REQUIRED_FIELDS = ['nickname']
+    REQUIRED_FIELDS = ['nickname', 'age']
 
     def save(self, *args, **kwargs):
         if not self.userId:
