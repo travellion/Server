@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from .models import Group
+from .models import *
 from accounts.models import User
 from datetime import datetime
 
@@ -38,3 +38,9 @@ class GroupSerializer(ModelSerializer):
             else:
                 return "D-Day"  # 오늘이 start_date랑 같음
         return None
+    
+
+class PlanSerializer(ModelSerializer):
+    class Meta:
+        model = Plan
+        fields = ['planId', 'title', 'date', 'day_of_week', 'individual_cost', 'total_cost', '', '', '', '', '', '', ]
