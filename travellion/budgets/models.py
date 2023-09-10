@@ -1,5 +1,7 @@
 from django.db import models
 from accounts.models import User
+from datetime import timedelta
+from django.core.exceptions import ObjectDoesNotExist
 
 
 # 그룹
@@ -20,33 +22,63 @@ class Group(models.Model):
 
 # 플랜 (N일)
 class Plan(models.Model):
-    group= models.ForeignKey(Group, related_name='group_of_plan', on_delete=models.CASCADE) # 해당하는 그룹
-    planId = models.AutoField(primary_key=True) # N일차의 N을 담당 
-    title = models.CharField(max_length=128)    
+    group= models.ForeignKey(Group, related_name='plans', on_delete=models.CASCADE) # 해당하는 그룹
+    planId = models.AutoField(primary_key=True)
     date = models.DateField(null=True, blank=True)
-    day_of_week = models.CharField(max_length=48)
-    individual_cost = models.IntegerField(default=0)
-    total_cost = models.IntegerField(default=0)
+    nDay = models.IntegerField(default = 0)
+
+    def save(self, *args, **kwargs):
+        try:
+            latest_plan = Plan.objects.filter(group=self.group).latest('date')
+            latest_nDay = Plan.objects.filter(group=self.group).latest('nDay')
+        except ObjectDoesNotExist:
+            latest_plan = None
+            latest_nDay = None
+
+        if not latest_plan:
+            self.date = self.group.start_date
+            self.nDay = 1
+        else:
+            self.date = latest_plan.date + timedelta(days=1)
+            self.nDay = latest_nDay.nDay + 1
+        super().save(*args, **kwargs)
     
     def __str__(self):
-        return self.title
+        return self.date
     
 
 # 카테고리
 class Category(models.Model):
-    plan = models.ForeignKey(Plan, related_name='plan_of_category', on_delete=models.CASCADE)
+    plan = models.ForeignKey(Plan, related_name='categories', on_delete=models.CASCADE)
     categoryId = models.AutoField(primary_key=True)
-    title = models.CharField(max_length=128)
-    # writer = models.ForeignKey(Group.member, related_name='plan_writer', on_delete=models.CASCADE)
-    writer = models.ForeignKey(
-        User,
-        related_name='plan_writer',
-        on_delete=models.CASCADE,
-        limit_choices_to={'group__member': True}  # 멤버만 작성 가능하도록 필터링 조건 추가
-    ) 
-    memo = models.CharField(max_length=512, null=True, blank=True)
+    category_title = models.CharField(max_length=128)
+    writer = models.ForeignKey(User, related_name='category_writer', on_delete=models.SET_NULL, null=True)
+    memo = models.CharField(max_length=128, null=True, blank=True)
     emoji = models.CharField(max_length=5, null=True, blank=True)
     cost = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.title
+        return self.category_title
+    
+
+# # 멤버만 작업할 수 있도록 권한 부여
+# plan_content_type = ContentType.objects.get_for_model(Plan)
+# category_content_type = ContentType.objects.get_for_model(Category)
+
+# add_plan_permission = Permission.objects.create(
+#     codename='add_plan',
+#     name='Can add plan',
+#     content_type=plan_content_type,
+# )
+
+# add_category_permission = Permission.objects.create(
+#     codename='add_category',
+#     name='Can add category',
+#     content_type=category_content_type,
+# )
+
+# group_members = Group.member.all()
+
+# # add_plan_permission과 add_category_permission을 사용자들에게 추가
+# for member in group_members:
+#     member.user_permissions.add(add_plan_permission, add_category_permission)
