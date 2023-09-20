@@ -42,6 +42,7 @@ class User(AbstractBaseUser):
     nickname = models.CharField(default='', max_length=124, null=False, blank=False, unique=False)
     profile = models.ImageField(verbose_name="profile", blank=True, null=True, upload_to='profile_image')
     age = models.IntegerField(null=True, blank=True)
+    is_certified = models.BooleanField(default=False)
 
     # User 모델의 필수 field
     is_active = models.BooleanField(default=True)    
@@ -78,3 +79,9 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return self.email
+    
+class EmailVerification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    email = models.EmailField()
+    verification_code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
