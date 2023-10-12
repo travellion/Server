@@ -16,7 +16,7 @@ from rest_framework.decorators import permission_classes
 from .permissions import IsGroupMember
 
 import requests
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
@@ -105,12 +105,16 @@ class CategoryViewSet(ModelViewSet):
 
 class ExchangeViewSet(ViewSet):
 
-    api_key = "APIKEY"
+    api_key = "i9ki0IWuYgdw3lwvxt7A3WSQLAANg4oj"
     url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
 
     def list(self, request):
-        current_date = datetime.now().strftime('%Y%m%d')        #오늘날짜 포맷팅
+        now = datetime.now()
         # 11시 이전이면 전날로 나오게 변경해야함
+        if now.time() < time(11, 0, 0):
+            now -= timedelta(days=1)
+
+        current_date = now.strftime('%Y%m%d')
         
         params = {
         'authkey': self.api_key,
@@ -120,9 +124,34 @@ class ExchangeViewSet(ViewSet):
 
         response=requests.get(self.url, params=params)
         r_data=response.json()
-
+        
         if response.status_code == 200:
             exchange_data = response.json()
-            return Response(exchange_data)
+            if isinstance(exchange_data, list):
+                
+                exchange_info_list = []
+                for exchange_info in exchange_data:
+                    result = exchange_info.get('result')
+                    curUnit = exchange_info.get('cur_unit')
+                    curNm = exchange_info.get('cur_nm')
+                    ttb = exchange_info.get('ttb')      # 외화를 구매할 때 적용하는 환율
+                    tts = exchange_info.get('tts')      # 외화를 판매할 때 적용하는 환율
+                    
+                    exchange_info_list.append({
+                        'result': result,
+                        'curUnit': curUnit,
+                        'curNm': curNm,
+                        'ttb': ttb,
+                        'tts': tts
+                    })
+
+                return Response(exchange_info_list)
+            else:
+                return Response({"error": "Exchange data not found."}, status=404)
         else:
             return Response({"error": "Request failed."}, status=400)
+
+
+
+
+
