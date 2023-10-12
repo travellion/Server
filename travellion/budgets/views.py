@@ -2,7 +2,7 @@ from .models import Group, Plan, Category
 from accounts.models import User
 from .serializers import GroupSerializer, PlanSerializer, CategorySerializer
 from accounts.serializers import LoginSerializer
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +15,8 @@ from rest_framework.decorators import permission_classes
 
 from .permissions import IsGroupMember
 
+import requests
+from datetime import datetime
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
@@ -100,6 +102,27 @@ class CategoryViewSet(ModelViewSet):
         )
         return queryset
 
-    
-    
 
+class ExchangeViewSet(ViewSet):
+
+    api_key = "APIKEY"
+    url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
+
+    def list(self, request):
+        current_date = datetime.now().strftime('%Y%m%d')        #오늘날짜 포맷팅
+        # 11시 이전이면 전날로 나오게 변경해야함
+        
+        params = {
+        'authkey': self.api_key,
+        'searchdate': current_date,
+        'data':'AP01'
+        }
+
+        response=requests.get(self.url, params=params)
+        r_data=response.json()
+
+        if response.status_code == 200:
+            exchange_data = response.json()
+            return Response(exchange_data)
+        else:
+            return Response({"error": "Request failed."}, status=400)
