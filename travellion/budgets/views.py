@@ -2,7 +2,7 @@ from .models import Group, Plan, Category
 from accounts.models import User
 from .serializers import GroupSerializer, PlanSerializer, CategorySerializer
 from accounts.serializers import LoginSerializer
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
@@ -15,6 +15,9 @@ from rest_framework.decorators import permission_classes
 
 from .permissions import IsGroupMember
 
+from datetime import datetime, time, timedelta
+import requests
+import json
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
@@ -100,6 +103,58 @@ class CategoryViewSet(ModelViewSet):
         )
         return queryset
 
+
+class ExchangeViewSet(ViewSet):
+
+    with open('apikey.json', 'r') as file:
+        api_key = json.load(file)['API_KEY']
     
-    
+    url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
+
+    def list(self, request):
+        now = datetime.now()
+        # 11시 이전이면 전날로 나오게 변경해야함
+        if now.time() < time(11, 0, 0):
+            now -= timedelta(days=1)
+
+        current_date = now.strftime('%Y%m%d')
+        
+        params = {
+        'authkey': self.api_key,
+        'searchdate': current_date,
+        'data':'AP01'
+        }
+
+        response=requests.get(self.url, params=params)
+        r_data=response.json()
+        
+        if response.status_code == 200:
+            exchange_data = response.json()
+            if isinstance(exchange_data, list):
+                
+                exchange_info_list = []
+                for exchange_info in exchange_data:
+                    result = exchange_info.get('result')
+                    curUnit = exchange_info.get('cur_unit')
+                    curNm = exchange_info.get('cur_nm')
+                    ttb = exchange_info.get('ttb')      # 외화를 구매할 때 적용하는 환율
+                    tts = exchange_info.get('tts')      # 외화를 판매할 때 적용하는 환율
+                    
+                    exchange_info_list.append({
+                        'result': result,
+                        'curUnit': curUnit,
+                        'curNm': curNm,
+                        'ttb': ttb,
+                        'tts': tts
+                    })
+
+                return Response(exchange_info_list)
+            else:
+                return Response({"error": "Exchange data not found."}, status=404)
+        else:
+            return Response({"error": "Request failed."}, status=400)
+
+
+
+
 
