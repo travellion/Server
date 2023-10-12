@@ -15,8 +15,9 @@ from rest_framework.decorators import permission_classes
 
 from .permissions import IsGroupMember
 
-import requests
 from datetime import datetime, time, timedelta
+import requests
+import json
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
@@ -105,7 +106,9 @@ class CategoryViewSet(ModelViewSet):
 
 class ExchangeViewSet(ViewSet):
 
-    api_key = "i9ki0IWuYgdw3lwvxt7A3WSQLAANg4oj"
+    with open('apikey.json', 'r') as file:
+        api_key = json.load(file)['API_KEY']
+    
     url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
 
     def list(self, request):
