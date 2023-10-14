@@ -113,12 +113,24 @@ class ExchangeViewSet(ViewSet):
 
     def list(self, request):
         now = datetime.now()
-        # 11시 이전이면 전날로 나오게 변경해야함
+        print(now)
+        # 현재 시간이 11시 이전이면 전날로 변경하고 오후 6시로 설정
         if now.time() < time(11, 0, 0):
             now -= timedelta(days=1)
+            now = now.replace(hour=12, minute=0, second=0, microsecond=0)
+
+        # 주말인 경우 가장 최근의 금요일로 설정
+        if now.weekday() == 5:  # 토요일
+            days_to_friday = (now.weekday() - 4) % 7
+            now -= timedelta(days=days_to_friday)
+        elif now.weekday() == 6:  # 일요일
+            days_to_friday = (now.weekday() - 4) % 7
+            now -= timedelta(days=days_to_friday)
+
 
         current_date = now.strftime('%Y%m%d')
-        
+        print(current_date)
+
         params = {
         'authkey': self.api_key,
         'searchdate': current_date,
@@ -137,16 +149,27 @@ class ExchangeViewSet(ViewSet):
                     result = exchange_info.get('result')
                     curUnit = exchange_info.get('cur_unit')
                     curNm = exchange_info.get('cur_nm')
+                    curNm = curNm.replace(" ", "-")
+                    country_name = curNm.split('-')[0]
                     ttb = exchange_info.get('ttb')      # 외화를 구매할 때 적용하는 환율
                     tts = exchange_info.get('tts')      # 외화를 판매할 때 적용하는 환율
                     
+                    if curUnit == "CNH":
+                            country_name = "중국"
+                            curNm = country_name + "-" + curNm
+                    elif curUnit == "EUR":
+                        country_name = "유럽연합"
+                        curNm = country_name + "-" + curNm
+
                     exchange_info_list.append({
                         'result': result,
                         'curUnit': curUnit,
                         'curNm': curNm,
+                        'country_name': country_name,
                         'ttb': ttb,
                         'tts': tts
                     })
+
 
                 return Response(exchange_info_list)
             else:
