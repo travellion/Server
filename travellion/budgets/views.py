@@ -39,19 +39,20 @@ class GroupViewSet(ModelViewSet):
 
         return super().perform_create(serializer)
     
-    def retrieve(self, request, pk=None, **kwargs):
-        groupId = self.kwargs['pk']
-        group = get_object_or_404(Group, groupId=groupId)
+    # 그룹 멤버 추가 로직
+    # def retrieve(self, request, pk=None, **kwargs):
+    #     groupId = self.kwargs['pk']
+    #     group = get_object_or_404(Group, groupId=groupId)
 
-        # 현재 로그인한 사용자가 그룹의 멤버인지 확인
-        if request.user in group.member.all():
-            print('이미 가입된 그룹')
-        else:
-            print('처음 가입하는 그룹')
-            group.member.add(request.user)
+    #     # 현재 로그인한 사용자가 그룹의 멤버인지 확인
+    #     if request.user in group.member.all():
+    #         print('이미 가입된 그룹')
+    #     else:
+    #         print('처음 가입하는 그룹')
+    #         group.member.add(request.user)
 
-        serializer = GroupSerializer(group)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    #     serializer = GroupSerializer(group)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @permission_classes([IsAuthenticated])
