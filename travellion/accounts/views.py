@@ -13,6 +13,8 @@ from django.core.mail import send_mail
 import random
 from rest_framework.permissions import IsAuthenticated
 
+from datetime import datetime
+
 class BlacklistRefreshView(APIView):   # 로그아웃시 리프레시 토큰 blacklist
     def post(self, request):
         token = RefreshToken(request.data.get('refresh'))
@@ -32,7 +34,12 @@ class LoginView(generics.GenericAPIView):
         email = request.data.get('email')
         password = request.data.get('password')
         user = authenticate(request, email=email, password=password)
-       
+        
+        current_date = datetime.now()
+        formatted_date = current_date.strftime('%y%m%d')
+
+        print(formatted_date)
+
         if user is not None:
             refresh = RefreshToken.for_user(user)
             serializer = ProfileSerializer(user)
