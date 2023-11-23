@@ -2,7 +2,7 @@ from django.db import models
 from accounts.models import User
 from datetime import timedelta
 from django.core.exceptions import ObjectDoesNotExist
-
+import secrets
 
 # 그룹
 class Group(models.Model):
@@ -16,8 +16,33 @@ class Group(models.Model):
     end_date = models.DateField(null=True, blank=True)
     budget = models.IntegerField(default=0)
 
-    def __str__(self):
-        return self.title
+    invite_code = models.CharField(max_length=32, unique=True, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+
+    def generate_invite_code(self, length=16):
+        return secrets.token_urlsafe(length)
+
+
+    invited_emails = models.TextField(null=True, blank=True, help_text="Invited email addresses (comma-separated)")
+
+    def save(self, *args, **kwargs):
+        # 초대 코드가 없으면 생성
+        if not self.invite_code:
+            self.invite_code = self.generate_invite_code()
+
+        super().save(*args, **kwargs)
+
+    def add_invited_email(self, email):
+        # 새로운 이메일을 초대 목록에 추가
+        if self.invited_emails:
+            self.invited_emails += f',{email}'
+        else:
+            self.invited_emails = email
+
+    def save_invited_email(self, email):
+        # 초대 목록을 저장
+        self.add_invited_email(email)
+        self.save()
     
 
 # 플랜 (N일)

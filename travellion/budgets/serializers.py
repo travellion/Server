@@ -90,3 +90,15 @@ class CategorySerializer(ModelSerializer):
     class Meta:
         model = Category
         fields = ['plan', 'categoryId', 'category_title', 'writer', 'memo', 'emoji', 'cost']
+
+class GroupInviteSerializer(ModelSerializer):
+    class Meta:
+        model = Group
+
+class InviteMemberSerializer(ModelSerializer):
+    #invited_email = serializers.EmailField()
+
+    class Meta:
+        model = Group
+        fields = ['email']
+        

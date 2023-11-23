@@ -1,6 +1,6 @@
 from .models import Group, Plan, Category
 from accounts.models import User
-from .serializers import GroupSerializer, PlanSerializer, CategorySerializer
+from .serializers import GroupSerializer, PlanSerializer, CategorySerializer, InviteMemberSerializer
 from accounts.serializers import LoginSerializer
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from django.shortcuts import get_object_or_404
@@ -9,15 +9,18 @@ from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
 import jwt
 from travellion.settings import JWT_SECRET_KEY
+import string, random
 
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
+from rest_framework.views import APIView
 
 from .permissions import IsGroupMember
-
+from django.http import JsonResponse
 from datetime import datetime, time, timedelta
 import requests
 import json
+from django.core.mail import send_mail
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
@@ -179,6 +182,68 @@ class ExchangeViewSet(ViewSet):
             return Response({"error": "Request failed."}, status=400)
 
 
+#하고있는거(지우면안됨.. 이메일 초대 완성하면 이걸로 수정할거임)
+# class InviteMemberAPIView(APIView):
+#     serializer_class = InviteMemberSerializer
+#     #def post(self, request, invite_code):
+#     def post(self, request):
+#         # group = get_object_or_404(Group, invite_code=invite_code)
+#         group = get_object_or_404(Group)
 
+#         #invited_emails = request.data.get('invited_emails', '').split(',')
+#        # group.invited_emails = ','.join(invited_emails)
+#         email = request.data.get('email')
+#         group.save()
 
+#         # 이메일 보내기
+#         subject = '초대코드'
+#         message = f'여행가계 그룹에 초대되려면 다음 코드를 입력하세요: {group.invite_code}'
+#         from_email = 'yeohaenggagye@gmail.com'
+#         recipient_list = [email]
+
+#         send_mail(subject, message, from_email, recipient_list)
+
+#         return Response({'message': 'Invitations sent successfully'}, status=status.HTTP_200_OK)
+
+def generate_invite_code(length=8):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
+
+class InviteMemberAPIView(APIView):
+    serializer_class = InviteMemberSerializer
+    def post(self, request):
+        #group = get_object_or_404(Group)
+
+        email = request.data.get('email')
+        
+        # 초대코드 생성
+        invite_code = generate_invite_code()
+        
+        # 초대코드를 그룹 모델에 저장
+        #group.invite_code = invite_code
+        #group.save()
+
+        # 이메일 보내기
+        subject = '초대코드'
+        message = f'여행가계 그룹에 초대되려면 다음 코드를 입력하세요: {invite_code}'
+        from_email = 'yeohaenggagye@gmail.com'
+        recipient_list = [email]
+
+        send_mail(subject, message, from_email, recipient_list)
+
+        return Response({'message': 'Invitations sent successfully'}, status=status.HTTP_200_OK)
+
+class JoinGroupAPIView(APIView):
+    def post(self, request, invite_code):
+        group = get_object_or_404(Group, invite_code=invite_code)
+
+        entered_invite_code = request.data.get('entered_invite_code', '')
+
+        if entered_invite_code == group.invite_code:
+            user = request.user
+            group.member.add(user)
+            serializer = GroupSerializer(group)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
 
