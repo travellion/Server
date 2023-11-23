@@ -1,5 +1,5 @@
 from django.urls import path, include, re_path
-from .views import GroupViewSet, PlanViewSet, CategoryViewSet, GroupListSet, ExchangeViewSet
+from .views import GroupViewSet, PlanViewSet, CategoryViewSet, GroupListSet, ExchangeViewSet, InviteMemberAPIView, JoinGroupAPIView
 from rest_framework.routers import SimpleRouter, DefaultRouter
 
 group_router = SimpleRouter(trailing_slash=False)
@@ -25,4 +25,7 @@ urlpatterns = [
     re_path(r'^(?P<userId>[0-9a-f-]+)/grouplist/(?P<groupId>\d+)/plan/(?P<planId>\d+)/', include(category_router.urls)),
 
     path('', include(api_router.urls)),
+
+    path('invite/', InviteMemberAPIView.as_view(), name='invite_member'),
+   path('join/<str:invite_code>/', JoinGroupAPIView.as_view(), name='join_group'),
 ]

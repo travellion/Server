@@ -118,8 +118,8 @@ class VerifyEmailView(APIView):
                 user.save()
                 
                 # 이메일 인증 코드를 데이터베이스에서 삭제
-                email_verification.delete()
-                
+                user.verification_code = None
+                user.save()
                 return Response({'message': '인증이 완료되었습니다.'}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'message': '인증 코드가 올바르지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -135,13 +135,6 @@ def send_email(request):
     message = "메시지 테스트"
     EmailMessage(subject=subject, body=message, to=to, from_email=from_email).send()
 
-# def send_verification_email(email, verification_code):
-#     subject = '인증번호 발송'  # 이메일 제목
-#     message = f'인증번호: {verification_code}'  # 이메일 내용
-#     from_email = 'yeohaenggagye@gmail.com'  # 발신 이메일 주소
-#     recipient_list = [email]  # 수신자 이메일 주소 리스트
-
-#     send_mail(subject, message, from_email, recipient_list)
 
 # 회원가입 요청을 받았을 때 이메일 보내기
 def send_verification_email(email):

@@ -43,7 +43,7 @@ class User(AbstractBaseUser):
     profile = models.ImageField(verbose_name="profile", blank=True, null=True, upload_to='profile_image')
     age = models.IntegerField(null=True, blank=True)
     is_certified = models.BooleanField(default=False)
-    verification_code = models.CharField(max_length=6)
+    verification_code = models.CharField(max_length=6, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     # User 모델의 필수 field
     is_active = models.BooleanField(default=True)    
