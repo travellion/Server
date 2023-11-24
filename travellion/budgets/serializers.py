@@ -38,12 +38,26 @@ class GroupSerializer(ModelSerializer):
                 return "D-Day"  # 오늘이 start_date랑 같음
         return None
     
+    # def get_spent_money(self, obj):
+    #     plans = obj.plans.all()
+    #     if plans:
+    #         spent_money = plans.aggregate(spent_money=models.Sum('categories__cost'))['spent_money']
+    #         return spent_money if spent_money is not None else 0
+    #     else:
+    #         return 0
+
     def get_spent_money(self, obj):
-        plans= obj.plans.all()
+        plans = obj.plans.all()
         if plans:
-            spent_money = plans.aggregate(spent_money=models.Sum('categories__cost'))['spent_money']
-            return spent_money if spent_money is not None else 0
-        return 0
+            try:
+                spent_money = plans.aggregate(spent_money=models.Sum('categories__cost'))['spent_money']
+                return spent_money if spent_money is not None else 0
+            except Exception as e:
+                print(f"Error calculating spent_money: {e}")
+                return 0
+        else:
+            return 0
+
 
     
 
@@ -100,5 +114,11 @@ class InviteMemberSerializer(ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['email']
+        fields = ['invite_email']
+
+class JoinMemberSerializer(ModelSerializer):
+    entered_invite_code = serializers.CharField()
+    class Meta:
+        model = Group
+        fields = ['entered_invite_code']
         
