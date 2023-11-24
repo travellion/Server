@@ -22,7 +22,7 @@ class Group(models.Model):
     def generate_invite_code(self, length=16):
         return secrets.token_urlsafe(length)
 
-
+    invite_email = models.EmailField(null=True, blank=True)
     invited_emails = models.TextField(null=True, blank=True, help_text="Invited email addresses (comma-separated)")
 
     def save(self, *args, **kwargs):

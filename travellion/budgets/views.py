@@ -1,6 +1,6 @@
 from .models import Group, Plan, Category
 from accounts.models import User
-from .serializers import GroupSerializer, PlanSerializer, CategorySerializer, InviteMemberSerializer
+from .serializers import GroupSerializer, PlanSerializer, CategorySerializer, InviteMemberSerializer, JoinMemberSerializer
 from accounts.serializers import LoginSerializer
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from django.shortcuts import get_object_or_404
@@ -182,68 +182,52 @@ class ExchangeViewSet(ViewSet):
             return Response({"error": "Request failed."}, status=400)
 
 
-#하고있는거(지우면안됨.. 이메일 초대 완성하면 이걸로 수정할거임)
-# class InviteMemberAPIView(APIView):
-#     serializer_class = InviteMemberSerializer
-#     #def post(self, request, invite_code):
-#     def post(self, request):
-#         # group = get_object_or_404(Group, invite_code=invite_code)
-#         group = get_object_or_404(Group)
-
-#         #invited_emails = request.data.get('invited_emails', '').split(',')
-#        # group.invited_emails = ','.join(invited_emails)
-#         email = request.data.get('email')
-#         group.save()
-
-#         # 이메일 보내기
-#         subject = '초대코드'
-#         message = f'여행가계 그룹에 초대되려면 다음 코드를 입력하세요: {group.invite_code}'
-#         from_email = 'yeohaenggagye@gmail.com'
-#         recipient_list = [email]
-
-#         send_mail(subject, message, from_email, recipient_list)
-
-#         return Response({'message': 'Invitations sent successfully'}, status=status.HTTP_200_OK)
-
 def generate_invite_code(length=8):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for i in range(length))
 
-class InviteMemberAPIView(APIView):
-    serializer_class = InviteMemberSerializer
-    def post(self, request):
-        #group = get_object_or_404(Group)
-
-        email = request.data.get('email')
-        
-        # 초대코드 생성
-        invite_code = generate_invite_code()
-        
-        # 초대코드를 그룹 모델에 저장
-        #group.invite_code = invite_code
-        #group.save()
-
-        # 이메일 보내기
-        subject = '초대코드'
-        message = f'여행가계 그룹에 초대되려면 다음 코드를 입력하세요: {invite_code}'
-        from_email = 'yeohaenggagye@gmail.com'
-        recipient_list = [email]
-
-        send_mail(subject, message, from_email, recipient_list)
-
-        return Response({'message': 'Invitations sent successfully'}, status=status.HTTP_200_OK)
-
 class JoinGroupAPIView(APIView):
-    def post(self, request, invite_code):
-        group = get_object_or_404(Group, invite_code=invite_code)
+    serializer_class = JoinMemberSerializer
+
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, groupId=group_id)
 
         entered_invite_code = request.data.get('entered_invite_code', '')
 
         if entered_invite_code == group.invite_code:
             user = request.user
+
+            # 사용자를 그룹에 추가
             group.member.add(user)
+            group.save()
+
             serializer = GroupSerializer(group)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
+        
+class InviteMembersAPIView(APIView):
+    serializer_class = InviteMemberSerializer
+    def post(self, request, group_id):
+        group = get_object_or_404(Group, groupId=group_id)
+
+        # 초대할 멤버의 이메일 가져오기
+        invite_email = request.data.get('invite_email', '')
+
+        if invite_email:
+            # 그룹 모델의 invite_email 필드에 이메일 저장
+            group.email = invite_email
+            group.save_invited_email(invite_email)
+
+            # 이메일로 초대코드 전송
+            subject = '초대코드'
+            message = f'여행가계 그룹에 초대되려면 다음 코드를 입력하세요: {group.invite_code}'
+            from_email = 'yeohaenggagye@gmail.com'
+            recipient_list = [invite_email]
+
+            send_mail(subject, message, from_email, recipient_list)
+
+            return Response({'message': 'Invitation sent successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': 'Invalid email'}, status=status.HTTP_400_BAD_REQUEST)
 
