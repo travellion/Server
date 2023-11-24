@@ -12,20 +12,54 @@ from travellion.settings import JWT_SECRET_KEY
 import string, random
 
 from rest_framework.permissions import IsAuthenticated
+from .permissions import IsGroupLeader, IsGroupMember
 from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 
 from .permissions import IsGroupMember
-from django.http import JsonResponse
 from datetime import datetime, time, timedelta
 import requests
 import json
 from django.core.mail import send_mail
+from rest_framework.decorators import action
+
 
 @permission_classes([IsAuthenticated])
 class GroupViewSet(ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+
+    def get_permissions(self):
+        if self.action == 'create':
+            # 그룹 생성 시에는 리더만 권한
+            return [IsAuthenticated(), IsGroupLeader()]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            # 그룹 정보 변경 및 삭제 시에는 리더 또는 멤버 모두 권한
+            return [IsAuthenticated(), IsGroupLeader | IsGroupMember()]
+        elif self.action == 'set_leader':
+            # set_leader 액션 시에는 리더만 권한
+            return [IsAuthenticated(), IsGroupLeader()]
+        else:
+            return [IsAuthenticated(), IsGroupLeader()]
+
+    @action(detail=True, methods=['post'])
+    def set_leader(self, request, pk=None):
+        group = self.get_object()
+
+        new_leader_id = request.data.get('new_leader_id', None)
+
+        if new_leader_id:
+            new_leader = User.objects.get(pk=new_leader_id)
+
+            if request.user == group.leader:
+                group.set_new_leader(new_leader)
+                serializer = GroupSerializer(group)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'You are not the current leader of the group.'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'message': 'New leader ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
     def perform_create(self, serializer):
         access_token = self.request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
@@ -56,7 +90,6 @@ class GroupViewSet(ModelViewSet):
 
     #     serializer = GroupSerializer(group)
     #     return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 @permission_classes([IsAuthenticated])
 class GroupListSet(ModelViewSet):

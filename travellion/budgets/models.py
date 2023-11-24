@@ -43,6 +43,10 @@ class Group(models.Model):
         # 초대 목록을 저장
         self.add_invited_email(email)
         self.save()
+
+    def set_new_lesder(self, new_leader):
+        self.leader = new_leader
+        self.save()
     
 
 # 플랜 (N일)

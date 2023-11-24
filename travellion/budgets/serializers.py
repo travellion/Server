@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
 from accounts.models import User
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserInfoSerializer
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class GroupSerializer(ModelSerializer):
     duration = serializers.SerializerMethodField()
     dday = serializers.SerializerMethodField()
     leader = serializers.ReadOnlyField(source = 'leader.nickname')
-    member = UserSerializer(read_only=True, many=True)
+    member = UserInfoSerializer(read_only=True, many=True)
     spent_money = serializers.SerializerMethodField()
 
     class Meta:
@@ -57,8 +57,6 @@ class GroupSerializer(ModelSerializer):
                 return 0
         else:
             return 0
-
-
     
 
 class PlanSerializer(ModelSerializer):
