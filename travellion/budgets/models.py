@@ -8,7 +8,7 @@ import secrets
 class Group(models.Model):
     groupId = models.AutoField(primary_key=True)
     leader = models.ForeignKey(User, related_name='group_leader', on_delete=models.CASCADE) # 플랜 생성자(리더)
-    member = models.ManyToManyField(User, related_name='group_members', null=True, blank=True) # 플랜에 초대된 사람
+    member = models.ManyToManyField(User, related_name='group_members', blank=True) # 플랜에 초대된 사람
     title = models.CharField(max_length=512)
     nation = models.CharField(max_length=512)   # 국가
     location = models.CharField(max_length=512, null=True, blank=True) # 지역
