@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 from .models import *
 from accounts.models import User
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserInfoSerializer
 from datetime import datetime
 
 
@@ -11,12 +11,12 @@ class GroupSerializer(ModelSerializer):
     duration = serializers.SerializerMethodField()
     dday = serializers.SerializerMethodField()
     leader = serializers.ReadOnlyField(source = 'leader.nickname')
-    member = UserSerializer(read_only=True, many=True)
+    member = UserInfoSerializer(read_only=True, many=True)
     spent_money = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
-        fields = ['groupId', 'leader', 'member', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'spent_money', 'dday']
+        fields = ['groupId', 'leader', 'member', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'spent_money', 'dday', 'editPer']
 
     def get_duration(self, obj):
         start_date = obj.start_date
@@ -37,14 +37,6 @@ class GroupSerializer(ModelSerializer):
             else:
                 return "D-Day"  # 오늘이 start_date랑 같음
         return None
-    
-    # def get_spent_money(self, obj):
-    #     plans = obj.plans.all()
-    #     if plans:
-    #         spent_money = plans.aggregate(spent_money=models.Sum('categories__cost'))['spent_money']
-    #         return spent_money if spent_money is not None else 0
-    #     else:
-    #         return 0
 
     def get_spent_money(self, obj):
         plans = obj.plans.all()
@@ -57,8 +49,6 @@ class GroupSerializer(ModelSerializer):
                 return 0
         else:
             return 0
-
-
     
 
 class PlanSerializer(ModelSerializer):

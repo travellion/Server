@@ -34,6 +34,10 @@ class UserSerializer(serializers.ModelSerializer):
         token = Token.objects.create(user=user)
         return user
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("email", "nickname")
 
 class ProfileSerializer(serializers.ModelSerializer): # 전체 유저 정보 조회
     email = serializers.EmailField(read_only=True)

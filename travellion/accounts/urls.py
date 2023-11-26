@@ -6,6 +6,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 
+
 urlpatterns = [
     path('signup/', UserCreate.as_view()),
     path('login/', LoginView.as_view()),
