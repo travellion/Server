@@ -100,7 +100,6 @@ class PlanViewSet(ModelViewSet):
                 return [IsAuthenticated(), IsGroupMember()]
             else:
                 return [IsAuthenticated(), IsGroupLeader()]
-        print(self.permission_classes)
         return super().get_permissions()
 
     def perform_create(self, serializer):
@@ -141,9 +140,36 @@ class CategoryViewSet(ModelViewSet):
                 return [IsAuthenticated(), IsGroupMember()]
             else:
                 return [IsAuthenticated(), IsGroupLeader()]
-        print(self.permission_classes)
         return super().get_permissions()
+    
+    def perform_create(self, serializer):
+        group_id = self.request.data.get('group')
+        plan_id = self.request.data.get('plan')
 
+        group = get_object_or_404(Group, pk=group_id)
+        plan = get_object_or_404(Plan, pk=plan_id, group=group)
+
+        serializer.save(plan=plan)
+    
+    def perform_update(self, serializer):
+        group_id = self.kwargs['groupId']
+        plan_id = self.kwargs['planId']
+
+        group = get_object_or_404(Group, groupId=group_id)
+        plan = get_object_or_404(Plan, pk=plan_id, group=group)
+
+        category = get_object_or_404(
+            Category,
+            categoryId=self.kwargs['pk'],
+            plan__group__groupId=group_id,
+            plan__planId=plan_id,
+        )
+
+        if group.editPer or group.leader == self.request.user:
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
 
 class ExchangeViewSet(ViewSet):
 
