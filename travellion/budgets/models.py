@@ -19,6 +19,8 @@ class Group(models.Model):
     invite_code = models.CharField(max_length=32, unique=True, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
 
+    editPer = models.BooleanField(default=False, null=True, blank=True)
+
     def generate_invite_code(self, length=16):
         return secrets.token_urlsafe(length)
 
@@ -44,9 +46,16 @@ class Group(models.Model):
         self.add_invited_email(email)
         self.save()
 
-    def set_new_lesder(self, new_leader):
+    def set_new_leader(self, new_leader):
         self.leader = new_leader
         self.save()
+
+    def set_edit(self, edit_per):
+        self.editPer = edit_per
+        self.save()
+
+    def __str__(self):
+        return self.title
     
 
 # 플랜 (N일)
@@ -73,8 +82,8 @@ class Plan(models.Model):
         super().save(*args, **kwargs)
     
     def __str__(self):
-        return self.date
-    
+        str = f"{self.group.title} - {self.nDay}"
+        return str
 
 # 카테고리
 class Category(models.Model):
@@ -87,27 +96,5 @@ class Category(models.Model):
     cost = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.category_title
-    
-
-# # 멤버만 작업할 수 있도록 권한 부여
-# plan_content_type = ContentType.objects.get_for_model(Plan)
-# category_content_type = ContentType.objects.get_for_model(Category)
-
-# add_plan_permission = Permission.objects.create(
-#     codename='add_plan',
-#     name='Can add plan',
-#     content_type=plan_content_type,
-# )
-
-# add_category_permission = Permission.objects.create(
-#     codename='add_category',
-#     name='Can add category',
-#     content_type=category_content_type,
-# )
-
-# group_members = Group.member.all()
-
-# # add_plan_permission과 add_category_permission을 사용자들에게 추가
-# for member in group_members:
-#     member.user_permissions.add(add_plan_permission, add_category_permission)
+        str = f"{self.plan.group.title} - {self.plan.nDay} - {self.category_title}"
+        return str

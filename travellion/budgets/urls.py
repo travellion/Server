@@ -8,7 +8,8 @@ group_router.register('group', GroupViewSet, basename='group')
 
 #그룹리더 변경URL
 urlpatterns = [
-    path('groups/<int:group_id>/set_leader/', GroupViewSet.as_view({'post': 'set_leader'}), name='set_group_leader'),
+    path('group/<int:group_id>/set_leader/', GroupViewSet.as_view({'post': 'set_leader'}), name='set_group_leader'),
+    path('group/<int:group_id>/change_edit_permission/', GroupViewSet.as_view({'post': 'set_edit'}), name='set_edit_permission'),
 ]
 
 grouplist_router = SimpleRouter(trailing_slash=False)

@@ -20,7 +20,10 @@ class IsGroupLeader(permissions.BasePermission):
 
         try:
             group = Group.objects.get(pk=group_id)
-            is_leader = group.leader == request.user
-            return isinstance
+            if group.editPer:
+                return True  # editPer가 True이면 모든 멤버가 권한을 가짐
+            else:
+                is_leader = group.leader == request.user
+                return is_leader
         except Group.DoesNotExist:
             return False

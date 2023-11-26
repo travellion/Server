@@ -16,7 +16,7 @@ class GroupSerializer(ModelSerializer):
 
     class Meta:
         model = Group
-        fields = ['groupId', 'leader', 'member', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'spent_money', 'dday']
+        fields = ['groupId', 'leader', 'member', 'title', 'nation', 'location', 'start_date', 'end_date', 'duration', 'budget', 'spent_money', 'dday', 'editPer']
 
     def get_duration(self, obj):
         start_date = obj.start_date
@@ -37,14 +37,6 @@ class GroupSerializer(ModelSerializer):
             else:
                 return "D-Day"  # 오늘이 start_date랑 같음
         return None
-    
-    # def get_spent_money(self, obj):
-    #     plans = obj.plans.all()
-    #     if plans:
-    #         spent_money = plans.aggregate(spent_money=models.Sum('categories__cost'))['spent_money']
-    #         return spent_money if spent_money is not None else 0
-    #     else:
-    #         return 0
 
     def get_spent_money(self, obj):
         plans = obj.plans.all()
