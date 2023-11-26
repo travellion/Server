@@ -149,7 +149,15 @@ class CategoryViewSet(ModelViewSet):
         group = get_object_or_404(Group, pk=group_id)
         plan = get_object_or_404(Plan, pk=plan_id, group=group)
 
-        serializer.save(plan=plan)
+        access_token = self.request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
+        try:
+            decoded = jwt.decode(access_token, algorithms=['HS256'], verify=True, key=JWT_SECRET_KEY)
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired')
+        user_id = decoded['userId']
+        writer = User.objects.get(pk=user_id)
+
+        serializer.save(plan=plan, writer=writer)
     
     def perform_update(self, serializer):
         group_id = self.kwargs['groupId']
