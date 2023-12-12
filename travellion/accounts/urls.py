@@ -1,10 +1,11 @@
 from django.urls import path, include
 from .views import UserCreate, LoginView, ProfileList, send_email
 from rest_framework_simplejwt import views as jwt_views
-from .views import BlacklistRefreshView, SendVerificationEmailView, VerifyEmailView, WithdrawalView
+from .views import BlacklistRefreshView, SendVerificationEmailView, VerifyEmailView, WithdrawalView, KakaoLogin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from .views import kakao_callback, kakao_login
 
 
 urlpatterns = [
@@ -26,7 +27,11 @@ urlpatterns = [
     path('send_verification_email/', SendVerificationEmailView.as_view(), name='send-verification-email'),
     path('verify_email/', VerifyEmailView.as_view(), name='verify-email'),
 
-    path('withdrawal/', WithdrawalView.as_view(), name='withdrawal')
+    path('withdrawal/', WithdrawalView.as_view(), name='withdrawal'),
+
+    path('kakao/login', kakao_login, name='kakao_login'),
+    path('kakao/callback/', kakao_callback, name='kakao_callback'),
+    path('kakao/login/finish/', KakaoLogin.as_view(), name='kakao_login_todjango'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

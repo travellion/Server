@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
 
 # DEBUG = False
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -45,15 +45,23 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     # 나중에 소셜로그인 할때 주석 해제
-    # 'allauth.socialaccount',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.kakao',
 
     'corsheaders',
     'drf_yasg',
+
+    'django.contrib.sites',
 ]
 
 SITE_ID = 1
 
 AUTH_USER_MODEL = 'accounts.User'
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None # username 필드 사용 x
+ACCOUNT_EMAIL_REQUIRED = True            # email 필드 사용 o
+ACCOUNT_USERNAME_REQUIRED = False        # username 필드 사용 x
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -90,20 +98,8 @@ REST_FRAMEWORK = {
     ),
 }
 
-
-secret_file = os.path.join(BASE_DIR, 'secrets.json')
-
-with open(secret_file) as f:
-    secrets = json.loads(f.read())
-
-def get_secret(setting, secrets=secrets):
-    try:
-        return secrets[setting]
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(setting)
-        raise ImproperlyConfigured(error_msg)
     
-SECRET_KEY = get_secret("SECRET_KEY")
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 from datetime import timedelta
 
