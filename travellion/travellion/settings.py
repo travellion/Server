@@ -44,9 +44,11 @@ INSTALLED_APPS = [
     # django-allauth
     'allauth',
     'allauth.account',
+
     # 나중에 소셜로그인 할때 주석 해제
     'allauth.socialaccount',
     'allauth.socialaccount.providers.kakao',
+    'allauth.socialaccount.providers.google',
 
     'corsheaders',
     'drf_yasg',
@@ -62,6 +64,7 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None # username 필드 사용 x
 ACCOUNT_EMAIL_REQUIRED = True            # email 필드 사용 o
 ACCOUNT_USERNAME_REQUIRED = False        # username 필드 사용 x
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -106,11 +109,11 @@ from datetime import timedelta
 # 추가적인 JWT_AUTH 설정
 SIMPLE_JWT = {
     # 액세스 토큰이 유효한 기간을 지정
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=3),
     # 새로 고침 토큰이 유효한 기간을 지정
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
+    'BLACKLIST_AFTER_ROTATION': True,
     'UPDATE_LAST_LOGIN': False,
 
     # 토큰에 대한 서명/확인 작업을 수행하는 데 사용되는 PyJWT 라이브러리의 알고리즘
