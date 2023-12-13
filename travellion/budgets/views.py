@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 from datetime import datetime, time, timedelta
 from django.core.mail import send_mail
 from rest_framework.decorators import action
+import os
 
 
 class GroupViewSet(ModelViewSet):
@@ -184,6 +185,8 @@ class ExchangeViewSet(ViewSet):
     with open('apikey.json', 'r') as file:
         api_key = json.load(file)['API_KEY']
     
+    api_key = os.environ.get("API_KEY")
+
     url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
 
     def list(self, request):

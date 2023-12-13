@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 import uuid
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,7 +32,10 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data['password']
         user.set_password(password)
         user.save()
-        token = Token.objects.create(user=user)
+
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
         return user
 
 class UserInfoSerializer(serializers.ModelSerializer):
