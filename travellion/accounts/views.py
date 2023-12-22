@@ -171,8 +171,9 @@ def send_verification_email(email):
 
 state = os.environ.get("STATE")
 # BASE_URL = "http://127.0.0.1:8000/"
-BASE_URL = "http://ec2-3-36-156-17.ap-northeast-2.compute.amazonaws.com"
-KAKAO_CALLBACK_URI = BASE_URL + '/kakao/callback/'
+BASE_URL = "http://ec2-3-36-156-17.ap-northeast-2.compute.amazonaws.com:8000/"
+#BASE_URL = "http://ec2-3-36-156-17.ap-northeast-2.compute.amazonaws.com/"
+KAKAO_CALLBACK_URI = BASE_URL + 'kakao/callback/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'google/callback/'
 
 #Kakao
@@ -319,7 +320,6 @@ def google_callback(request):
         data = {'access_token': access_token, 'code': code}
         accept = requests.post(f"{BASE_URL}api/v1/auth/google/login/finish/", data=data)
         accept_status = accept.status_code
-
         # 뭔가 중간에 문제가 생기면 에러
         if accept_status != 200:
             return JsonResponse({'err_msg': 'failed to signin'}, status=accept_status)
@@ -333,11 +333,11 @@ def google_callback(request):
         accept = requests.post(f"{BASE_URL}google/login/finish/", data=data)
         accept_status = accept.status_code
         
+        print(data)
         print(accept_status)
-
+        
         if accept_status != 200:
-            return JsonResponse({'err_msg': 'failed to signup'}, status=accept_status)
-
+           return JsonResponse({'err_msg': 'failed to signup'}, status=accept_status)
     except SocialAccount.DoesNotExist:
         # User는 있는데 SocialAccount가 없을 때 (=일반회원으로 가입된 이메일일때)
         return JsonResponse({'err_msg': 'email exists but not social user'}, status=status.HTTP_400_BAD_REQUEST)
