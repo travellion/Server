@@ -180,22 +180,26 @@ class CategoryViewSet(ModelViewSet):
         else:
             return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
 
+from decouple import config
+
 class ExchangeViewSet(ViewSet):
 
-    with open('apikey.json', 'r') as file:
-        api_key = json.load(file)['API_KEY']
+   # with open('apikey.json', 'r') as file:
+       # api_key = json.load(file)['API_KEY']
     
-    api_key = os.environ.get("API_KEY")
-
+    #api_key = os.environ.get("API_KEY")
+    
+    api_key = config('API_KEY')
+    
     url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
 
     def list(self, request):
         now = datetime.now()
-        print(now)
+        
         # 현재 시간이 11시 이전이면 전날로 변경하고 오후 6시로 설정
         if now.time() < time(11, 0, 0):
             now -= timedelta(days=1)
-            now = now.replace(hour=12, minute=0, second=0, microsecond=0)
+            now = now.replace(hour=18, minute=0, second=0, microsecond=0)
 
         # 주말인 경우 가장 최근의 금요일로 설정
         if now.weekday() == 5:  # 토요일
@@ -207,7 +211,6 @@ class ExchangeViewSet(ViewSet):
 
 
         current_date = now.strftime('%Y%m%d')
-        print(current_date)
 
         params = {
         'authkey': self.api_key,

@@ -273,6 +273,8 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
+#SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
+from decouple import config
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 JWT_SECRET_KEY = SECRET_KEY

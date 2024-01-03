@@ -1,11 +1,13 @@
 from django.urls import path, include
 from .views import UserCreate, LoginView, ProfileList, send_email
 from rest_framework_simplejwt import views as jwt_views
-from .views import BlacklistRefreshView, SendVerificationEmailView, VerifyEmailView, WithdrawalView, KakaoLogin, GoogleLogin
+from .views import BlacklistRefreshView, SendVerificationEmailView, VerifyEmailView, WithdrawalView, KakaoLogin
+# , GoogleLogin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from .views import kakao_callback, kakao_login, google_callback, google_login
+from .views import kakao_callback, kakao_login
+# , google_callback, google_login
 
 
 urlpatterns = [
@@ -36,9 +38,9 @@ urlpatterns = [
     path('kakao/login/finish/', KakaoLogin.as_view(), name='kakao_login_todjango'),
 
     #구글 소셜 로그인
-    path('google/login/', google_login, name='google_login'),
-    path('google/callback/', google_callback, name='google_callback'),
-    path('google/login/finish/', GoogleLogin.as_view(), name='google_login_todjango'),
+    # path('google/login/', google_login, name='google_login'),
+    # path('google/callback/', google_callback, name='google_callback'),
+    # path('google/login/finish/', GoogleLogin.as_view(), name='google_login_todjango'),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
