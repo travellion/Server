@@ -1,6 +1,7 @@
 from pathlib import Path
 import os, json
-
+from decouple import config
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -12,8 +13,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = False
-# DEBUG = True
+# DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -101,8 +102,6 @@ REST_FRAMEWORK = {
     ),
 }
 
-    
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 from datetime import timedelta
 
@@ -274,7 +273,5 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
-from decouple import config
-SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 JWT_SECRET_KEY = SECRET_KEY
