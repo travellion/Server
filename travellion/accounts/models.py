@@ -31,7 +31,6 @@ class UserManager(BaseUserManager):
             nickname = nickname,
             age = age,
         )
-        token = Token.objects.create(user=user)
         user.is_admin = True
         user.save(using=self._db)
         return user

@@ -1,31 +1,59 @@
 from .models import Group, Plan, Category
 from accounts.models import User
 from .serializers import GroupSerializer, PlanSerializer, CategorySerializer, InviteMemberSerializer, JoinMemberSerializer
-from accounts.serializers import LoginSerializer
 from rest_framework.viewsets import ModelViewSet, ViewSet
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import AuthenticationFailed
-import jwt
+import jwt, string, random, requests, json
 from travellion.settings import JWT_SECRET_KEY
-import string, random
 
 from rest_framework.permissions import IsAuthenticated
+from .permissions import IsGroupLeader, IsGroupMember
 from rest_framework.decorators import permission_classes
 from rest_framework.views import APIView
 
-from .permissions import IsGroupMember
-from django.http import JsonResponse
 from datetime import datetime, time, timedelta
-import requests
-import json
 from django.core.mail import send_mail
+from rest_framework.decorators import action
+import os
 
-@permission_classes([IsAuthenticated])
+
 class GroupViewSet(ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=True, methods=['post'])
+    def set_leader(self, request, pk=None):
+        group = self.get_object()
+
+        new_leader_id = request.data.get('new_leader_id', None)
+        
+        if new_leader_id:
+            new_leader = User.objects.get(pk=new_leader_id)
+
+            if request.user == group.leader:
+                group.set_new_leader(new_leader)
+                serializer = GroupSerializer(group)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': '현재 그룹 리더가 아닙니다.'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'message': '새로운 리더의 ID가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def set_edit(self, request, pk=None):
+        group = self.get_object()
+        
+        if request.user == group.leader:
+            group.set_edit(not group.editPer)
+            serializer = GroupSerializer(group)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': '현재 그룹 리더가 아닙니다.'}, status=status.HTTP_403_FORBIDDEN)
+  
 
     def perform_create(self, serializer):
         access_token = self.request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
@@ -42,22 +70,7 @@ class GroupViewSet(ModelViewSet):
 
         return super().perform_create(serializer)
     
-    # 그룹 멤버 추가 로직
-    # def retrieve(self, request, pk=None, **kwargs):
-    #     groupId = self.kwargs['pk']
-    #     group = get_object_or_404(Group, groupId=groupId)
-
-    #     # 현재 로그인한 사용자가 그룹의 멤버인지 확인
-    #     if request.user in group.member.all():
-    #         print('이미 가입된 그룹')
-    #     else:
-    #         print('처음 가입하는 그룹')
-    #         group.member.add(request.user)
-
-    #     serializer = GroupSerializer(group)
-    #     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
+   
 @permission_classes([IsAuthenticated])
 class GroupListSet(ModelViewSet):
     queryset = Group.objects.all()
@@ -68,34 +81,46 @@ class GroupListSet(ModelViewSet):
         return self.queryset.filter(member=id)
     
 
-@permission_classes([IsAuthenticated, IsGroupMember])
 class PlanViewSet(ModelViewSet):
     queryset = Plan.objects.all()
     serializer_class = PlanSerializer
 
-    permission_classes = [IsGroupMember]
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get_queryset(self, **kwargs): # Override
-        id = self.kwargs['groupId']
-        return self.queryset.filter(group=id)
+        if self.request.user.is_authenticated:    
+            id = self.kwargs['groupId']
+            return self.queryset.filter(group=id)
+        
+    def get_permissions(self):
+        if self.action == 'create':
+            group_id = self.request.data.get('group')
+            group = get_object_or_404(Group, pk=group_id)
 
+            if group.editPer:
+                return [IsAuthenticated(), IsGroupMember()]
+            else:
+                return [IsAuthenticated(), IsGroupLeader()]
+        return super().get_permissions()
 
-@permission_classes([IsAuthenticated, IsGroupMember])
+    def perform_create(self, serializer):
+        group_id = self.request.data.get('group')
+        group = get_object_or_404(Group, pk=group_id)
+        
+        if group.member.filter(pk=self.request.user.pk).exists():
+            if group.editPer or group.leader == self.request.user:
+                serializer.save(group=group)
+            elif not group.editPer:
+                return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        else:
+            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+        
+
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-    permission_classes = [IsGroupMember]
-
-    def perform_create(self, serializer):  
-        access_token = self.request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
-        try:
-            decoded = jwt.decode(access_token, algorithms=['HS256'], verify=True, key=JWT_SECRET_KEY)
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Token expired')
-        user_id = decoded['userId']
-        writer = User.objects.get(pk=user_id)
-        serializer.save(writer=writer)
+    permission_classes = [IsAuthenticated, IsGroupMember]
 
     def get_queryset(self, **kwargs): # Override
         group_id = self.kwargs['groupId']
@@ -107,21 +132,74 @@ class CategoryViewSet(ModelViewSet):
         )
         return queryset
 
+    def get_permissions(self):
+        if self.action == 'create':
+            group_id = self.request.data.get('group')
+            group = get_object_or_404(Group, pk=group_id)
+
+            if group.editPer:
+                return [IsAuthenticated(), IsGroupMember()]
+            else:
+                return [IsAuthenticated(), IsGroupLeader()]
+        return super().get_permissions()
+    
+    def perform_create(self, serializer):
+        group_id = self.request.data.get('group')
+        plan_id = self.request.data.get('plan')
+
+        group = get_object_or_404(Group, pk=group_id)
+        plan = get_object_or_404(Plan, pk=plan_id, group=group)
+
+        access_token = self.request.META.get('HTTP_AUTHORIZATION', '').split(' ')[1]
+        try:
+            decoded = jwt.decode(access_token, algorithms=['HS256'], verify=True, key=JWT_SECRET_KEY)
+        except jwt.ExpiredSignatureError:
+            raise AuthenticationFailed('Token expired')
+        user_id = decoded['userId']
+        writer = User.objects.get(pk=user_id)
+
+        serializer.save(plan=plan, writer=writer)
+    
+    def perform_update(self, serializer):
+        group_id = self.kwargs['groupId']
+        plan_id = self.kwargs['planId']
+
+        group = get_object_or_404(Group, groupId=group_id)
+        plan = get_object_or_404(Plan, pk=plan_id, group=group)
+
+        category = get_object_or_404(
+            Category,
+            categoryId=self.kwargs['pk'],
+            plan__group__groupId=group_id,
+            plan__planId=plan_id,
+        )
+
+        if group.editPer or group.leader == self.request.user:
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': '권한이 없습니다.'}, status=status.HTTP_403_FORBIDDEN)
+
+from decouple import config
 
 class ExchangeViewSet(ViewSet):
 
-    with open('apikey.json', 'r') as file:
-        api_key = json.load(file)['API_KEY']
+   # with open('apikey.json', 'r') as file:
+       # api_key = json.load(file)['API_KEY']
+    
+    #api_key = os.environ.get("API_KEY")
+    
+    api_key = config('API_KEY')
     
     url="https://www.koreaexim.go.kr/site/program/financial/exchangeJSON"
 
     def list(self, request):
         now = datetime.now()
-        print(now)
+        
         # 현재 시간이 11시 이전이면 전날로 변경하고 오후 6시로 설정
         if now.time() < time(11, 0, 0):
             now -= timedelta(days=1)
-            now = now.replace(hour=12, minute=0, second=0, microsecond=0)
+            now = now.replace(hour=18, minute=0, second=0, microsecond=0)
 
         # 주말인 경우 가장 최근의 금요일로 설정
         if now.weekday() == 5:  # 토요일
@@ -133,7 +211,6 @@ class ExchangeViewSet(ViewSet):
 
 
         current_date = now.strftime('%Y%m%d')
-        print(current_date)
 
         params = {
         'authkey': self.api_key,

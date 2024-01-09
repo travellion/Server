@@ -4,6 +4,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 import uuid
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -31,9 +32,16 @@ class UserSerializer(serializers.ModelSerializer):
         password = validated_data['password']
         user.set_password(password)
         user.save()
-        token = Token.objects.create(user=user)
+
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+
         return user
 
+class UserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("email", "nickname")
 
 class ProfileSerializer(serializers.ModelSerializer): # 전체 유저 정보 조회
     email = serializers.EmailField(read_only=True)
