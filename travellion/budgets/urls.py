@@ -1,5 +1,5 @@
 from django.urls import path, include, re_path
-from .views import GroupViewSet, PlanViewSet, CategoryViewSet, GroupListSet, ExchangeViewSet, InviteMembersAPIView, JoinGroupAPIView, InviteMembersAPIView
+from .views import GroupViewSet, PlanViewSet, CategoryViewSet, GroupListSet, ExchangeViewSet, JoinGroupAPIView, InviteMembersAPIView
 from rest_framework.routers import SimpleRouter, DefaultRouter
 
 
@@ -32,8 +32,10 @@ urlpatterns = [
     re_path(r'^(?P<userId>[0-9a-f-]+)/grouplist/(?P<groupId>\d+)/', include(plan_router.urls)),
     re_path(r'^(?P<userId>[0-9a-f-]+)/grouplist/(?P<groupId>\d+)/plan/(?P<planId>\d+)/', include(category_router.urls)),
 
-    #그룹초대URL
-    path('join/<int:group_id>/', JoinGroupAPIView.as_view(), name='join_group'),
+    path('', include(api_router.urls)),
+
+    # path('invite/', InviteMemberAPIView.as_view(), name='invite_member'),
+    path('join/', JoinGroupAPIView.as_view(), name='join_group'),
     path('groups/<int:group_id>/invite/', InviteMembersAPIView.as_view(), name='invite_member'),
 
     #환율URL
