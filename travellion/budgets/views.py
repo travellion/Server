@@ -261,16 +261,13 @@ class ExchangeViewSet(ViewSet):
 
 class JoinGroupAPIView(APIView):
     serializer_class = JoinMemberSerializer
-
-    def post(self, request, group_id):
-        group = get_object_or_404(Group, groupId=group_id)
-
+    
+    def post(self, request):
         entered_invite_code = request.data.get('entered_invite_code', '')
+        group = Group.objects.filter(invite_code=entered_invite_code).first()
 
-        if entered_invite_code == group.invite_code:
+        if group:
             user = request.user
-
-            # 사용자를 그룹에 추가
             group.member.add(user)
             group.save()
 
@@ -278,6 +275,29 @@ class JoinGroupAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class JoinGroupAPIView(APIView):
+#     serializer_class = JoinMemberSerializer
+    
+#     def post(self, request):
+#         entered_invite_code = request.data.get('entered_invite_code', '')
+
+#         # 초대코드에 해당하는 그룹을 찾기
+#         try:
+#             group = Group.objects.get(invite_code=entered_invite_code)
+#         except Group.DoesNotExist:
+#             return Response({'message': 'Invalid invite code'}, status=status.HTTP_400_BAD_REQUEST)
+
+#         user = request.user
+
+#         # 사용자를 그룹에 추가
+#         group.member.add(user)
+#         group.save()
+
+#         serializer = GroupSerializer(group)
+#         return Response(serializer.data, status=status.HTTP_200_OK)
+
         
 class InviteMembersAPIView(APIView):
     serializer_class = InviteMemberSerializer
