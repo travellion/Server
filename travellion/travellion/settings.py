@@ -12,8 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = False
-# DEBUG = True
+#DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -100,9 +100,9 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny', # 누구나 접근
     ),
 }
-
-    
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+   
+from decouple import config
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 from datetime import timedelta
 

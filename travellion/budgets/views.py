@@ -259,10 +259,6 @@ class ExchangeViewSet(ViewSet):
             return Response({"error": "Request failed."}, status=400)
 
 
-def generate_invite_code(length=8):
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for i in range(length))
-
 class JoinGroupAPIView(APIView):
     serializer_class = JoinMemberSerializer
 
