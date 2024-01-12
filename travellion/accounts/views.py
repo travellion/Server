@@ -92,11 +92,13 @@ class ProfileList(generics.RetrieveUpdateAPIView):
         return self.queryset.filter(userId=userId)
     
 
-
 class SendVerificationEmailView(APIView):
     serializer_class = EmailSerializer
     def post(self, request):
         email = request.data.get('email')
+
+        existing_user = User.objects.filter(email=email).first()
+
         verification_code = str(random.randint(100000, 999999))
         
         # 이메일 보내기
@@ -105,8 +107,11 @@ class SendVerificationEmailView(APIView):
         from_email = 'yeohaenggagye@gmail.com'
         recipient_list = [email]
         
-        send_mail(subject, message, from_email, recipient_list)
-        
+        if existing_user:
+            existing_user.verification_code = verification_code
+            existing_user.save()
+            send_mail(subject, message, from_email, recipient_list)
+            return Response({'message': '인증 코드를 다시 전송했습니다.'}, status=status.HTTP_200_OK)
         # 데이터베이스에 인증 코드 저장
         # EmailVerification.objects.create(email=email, verification_code=verification_code)
         serializer = EmailVerificationSerializer(data={'email':email, 'verification_code':verification_code})
