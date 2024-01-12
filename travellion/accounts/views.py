@@ -118,6 +118,7 @@ class SendVerificationEmailView(APIView):
 
         if serializer.is_valid():
             serializer.save()
+            send_mail(subject, message, from_email, recipient_list)
             return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
        # return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
