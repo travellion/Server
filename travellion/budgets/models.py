@@ -28,11 +28,21 @@ class Group(models.Model):
     invited_emails = models.TextField(null=True, blank=True, help_text="Invited email addresses (comma-separated)")
 
     def save(self, *args, **kwargs):
+        # Group이 처음 생성되는 경우에만 Plan을 자동 생성
+        is_new = self._state.adding
+
         # 초대 코드가 없으면 생성
         if not self.invite_code:
             self.invite_code = self.generate_invite_code()
 
         super().save(*args, **kwargs)
+
+        if is_new and self.start_date and self.end_date:
+            duration = (self.end_date - self.start_date).days + 1
+            for day in range(duration):
+                plan_date = self.start_date + timedelta(days=day)
+                Plan.objects.create(group=self, date=plan_date, nDay=day+1)
+
 
     def add_invited_email(self, email):
         # 새로운 이메일을 초대 목록에 추가
