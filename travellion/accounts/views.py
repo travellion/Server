@@ -92,37 +92,94 @@ class ProfileList(generics.RetrieveUpdateAPIView):
         return self.queryset.filter(userId=userId)
     
 
+# class SendVerificationEmailView(APIView):
+#     serializer_class = EmailSerializer
+#     def post(self, request):
+#         email = request.data.get('email')
+
+#         existing_user = User.objects.filter(email=email).first()
+
+#         verification_code = str(random.randint(100000, 999999))
+        
+#         # 이메일 보내기
+#         subject = '회원가입 인증 코드'
+#         message = f'회원가입을 완료하려면 다음 코드를 입력하세요: {verification_code}'
+#         from_email = 'yeohaenggagye@gmail.com'
+#         recipient_list = [email]
+        
+#         if existing_user:
+#             existing_user.verification_code = verification_code
+#             existing_user.save()
+#             send_mail(subject, message, from_email, recipient_list)
+#             return Response({'message': '인증 코드를 다시 전송했습니다.'}, status=status.HTTP_200_OK)
+#         # 데이터베이스에 인증 코드 저장
+#         # EmailVerification.objects.create(email=email, verification_code=verification_code)
+#         serializer = EmailVerificationSerializer(data={'email':email, 'verification_code':verification_code})
+
+#         if serializer.is_valid():
+#             serializer.save()
+#             send_mail(subject, message, from_email, recipient_list)
+#             return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#        # return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
+
+
+# class VerifyEmailView(APIView):
+#     serializer_class = EmailVerificationSerializer
+#     def post(self, request):
+#         email = request.data.get('email')
+#         verification_code = request.data.get('verification_code')
+        
+#         try:
+#             # 데이터베이스에서 저장된 인증 코드 검색
+#             email_verification = User.objects.get(email=email)
+            
+#             if verification_code == email_verification.verification_code:
+#                 # 인증 코드가 일치하면 사용자를 활성화(회원가입 완료)시킴
+#                 user = User.objects.get(email=email)
+#                 user.is_certified = True
+#                 user.save()
+                
+#                 # 이메일 인증 코드를 데이터베이스에서 삭제
+#                 user.verification_code = None
+#                 user.save()
+#                 return Response({'message': '인증이 완료되었습니다.'}, status=status.HTTP_201_CREATED)
+#             else:
+#                 return Response({'message': '인증 코드가 올바르지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+#         except User.DoesNotExist:
+#             return Response({'message': '인증 코드를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+    
 class SendVerificationEmailView(APIView):
     serializer_class = EmailSerializer
+
     def post(self, request):
         email = request.data.get('email')
-
-        existing_user = User.objects.filter(email=email).first()
-
         verification_code = str(random.randint(100000, 999999))
-        
+
         # 이메일 보내기
         subject = '회원가입 인증 코드'
         message = f'회원가입을 완료하려면 다음 코드를 입력하세요: {verification_code}'
         from_email = 'yeohaenggagye@gmail.com'
         recipient_list = [email]
-        
-        if existing_user:
-            existing_user.verification_code = verification_code
-            existing_user.save()
-            send_mail(subject, message, from_email, recipient_list)
-            return Response({'message': '인증 코드를 다시 전송했습니다.'}, status=status.HTTP_200_OK)
-        # 데이터베이스에 인증 코드 저장
-        # EmailVerification.objects.create(email=email, verification_code=verification_code)
-        serializer = EmailVerificationSerializer(data={'email':email, 'verification_code':verification_code})
 
-        if serializer.is_valid():
-            serializer.save()
-            send_mail(subject, message, from_email, recipient_list)
-            return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-       # return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
+        send_mail(subject, message, from_email, recipient_list)
 
+        # 데이터베이스에서 이메일 찾기
+        try:
+            email_verification = EmailVerification.objects.get(email=email)
+            # 존재하면 기존 레코드의 인증 코드 업데이트
+            email_verification.verification_code = verification_code
+            email_verification.save()
+        except EmailVerification.DoesNotExist:
+            # 존재하지 않으면 새 레코드 생성
+            serializer = EmailVerificationSerializer(data={'email': email, 'verification_code': verification_code})
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': '인증 코드를 이메일로 전송했습니다.'}, status=status.HTTP_200_OK)
 
 class VerifyEmailView(APIView):
     serializer_class = EmailVerificationSerializer
@@ -132,24 +189,25 @@ class VerifyEmailView(APIView):
         
         try:
             # 데이터베이스에서 저장된 인증 코드 검색
-            email_verification = User.objects.get(email=email)
-            
-            if verification_code == email_verification.verification_code:
+            email_verification =  EmailVerification.objects.get(email=email)
+            print(f"Found EmailVerification record: {email_verification.verification_code}")
+
+            # if verification_code == email_verification.verification_code:
+            if email_verification.verification_code and verification_code == email_verification.verification_code:
                 # 인증 코드가 일치하면 사용자를 활성화(회원가입 완료)시킴
-                user = User.objects.get(email=email)
-                user.is_certified = True
-                user.save()
+                # user = User.objects.get(email=email)
+                # user.is_certified = True
+                # user.save()
                 
                 # 이메일 인증 코드를 데이터베이스에서 삭제
-                user.verification_code = None
-                user.save()
+                email_verification.verification_code = None
+                email_verification.save()
                 return Response({'message': '인증이 완료되었습니다.'}, status=status.HTTP_201_CREATED)
             else:
                 return Response({'message': '인증 코드가 올바르지 않습니다.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        except User.DoesNotExist:
-            return Response({'message': '인증 코드를 찾을 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-    
+        except EmailVerification.DoesNotExist as e:
+            print(f"EmailVerification record not found for email: {email}. Error: {e}")
 
 def send_email(request):
     subject = "message"

@@ -1,4 +1,4 @@
-from .models import User
+from .models import User, EmailVerification
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
@@ -64,7 +64,7 @@ class LoginSerializer(serializers.Serializer):  # 회원가입한 유저 로그�
     
 class EmailVerificationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = EmailVerification
         fields = ['email', 'verification_code']
 
 class EmailSerializer(serializers.ModelSerializer):

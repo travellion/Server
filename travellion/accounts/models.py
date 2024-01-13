@@ -80,8 +80,8 @@ class User(AbstractBaseUser):
     def __str__(self):
         return self.email
     
-# class EmailVerification(models.Model):
-#     #user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-#     verification_code = models.CharField(max_length=6)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     email = models.EmailField()
+class EmailVerification(models.Model):
+    #user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    verification_code = models.CharField(max_length=6, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    email = models.EmailField()
