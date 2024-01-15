@@ -19,6 +19,10 @@ from django.core.mail import send_mail
 from rest_framework.decorators import action
 import os
 
+# 요청 헤더 추가
+# Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36
+# headers = {"user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"}
+# r = requests.get("http://127.0.0.1:8000", headers=headers)
 
 class GroupViewSet(ModelViewSet):
     queryset = Group.objects.all()
